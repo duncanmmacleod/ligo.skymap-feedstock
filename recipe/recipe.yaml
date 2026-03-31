@@ -24,8 +24,6 @@ source:
       then: posix_memalign.patch
 
 build:
-  dynamic_linking:
-    overlinking_behavior: error
   number: 1
   python:
     entry_points:
