@@ -16,7 +16,6 @@ Documentation: https://lscsoft.docs.ligo.org/ligo.skymap/
 The `ligo.skymap` package provides tools for reading, writing, generating,
 and visualizing gravitational-wave probability maps from LIGO and Virgo.
 
-
 Current build status
 ====================
 
