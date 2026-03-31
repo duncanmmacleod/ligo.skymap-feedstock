@@ -2,7 +2,8 @@ schema_version: 1
 
 context:
   name: ligo.skymap
-  version: 2.5.3
+  version: "2.5.3"
+  python_min: "3.11"
 
 package:
   name: ${{ name|lower }}
@@ -49,11 +50,11 @@ build:
       - ligo-skymap-plot-stats = ligo.skymap.tool.ligo_skymap_plot_stats:main
       - ligo-skymap-plot-volume = ligo.skymap.tool.ligo_skymap_plot_volume:main
       - ligo-skymap-stats = ligo.skymap.tool.ligo_skymap_stats:main
+    version_independent: true
   script:
     - CFLAGS="${CFLAGS} -O3 -flto" CPPFLAGS="${CPPFLAGS} -O3" LIGO_SKYMAP_USE_SYSTEM_CHEALPIX=1 ${{ PYTHON }} -m pip install . -vv
   skip:
     - win
-    - match(python, "<3.11")
 
 requirements:
   build:
@@ -65,7 +66,7 @@ requirements:
       then:
         - cross-python_${{ target_platform }}
         - numpy
-        - python
+        - python ${{ python_min }}.*
   host:
     - chealpix
     - extension-helpers
@@ -73,7 +74,8 @@ requirements:
     - libcblas
     - numpy
     - pip
-    - python
+    - python ${{ python_min }}.*
+    - python-abi3 ${{ python_min }}.*
     - setuptools >=77
     - setuptools-scm >=8
     # OpenMP
@@ -97,7 +99,7 @@ requirements:
     - networkx
     - numpy >=2.0.0
     - pillow >=2.5.0
-    - python
+    - python >=${{ python_min }}
     - python-lal >=7.7.0
     - python-lalinspiral >=5.0.3
     - python-lalmetaio >=4.0.6
@@ -111,6 +113,7 @@ requirements:
 tests:
   - requirements:
       run:
+        - abi3audit
         - lalapps
         - pip
         - pytest
@@ -118,6 +121,7 @@ tests:
         - pytest-benchmark
         - pytest-mpl
         - pytest-rerunfailures
+        - python ${{ python_min }}.*
     script:
       env:
         OMP_NUM_THREADS: ${{ env.get('CPU_COUNT', default="1") }}
@@ -125,6 +129,9 @@ tests:
         # Check metadata
         - python -m pip check
         - python -m pip show ligo-skymap
+        # Check abi3
+        - export SP_DIR=$(python -c "import site; print(site.getsitepackages()[0])")
+        - abi3audit $SP_DIR/ligo/skymap/core.abi3.so -s -v --assume-minimum-abi3 ${{ python_min }}
         # Run test suite (native builds only)
         - if: build_platform == target_platform
           then: python -m pytest -ra --pyargs "ligo.skymap" --omp-get-num-threads
